@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqlli Yo'l va Infratuzilma Rejalashtirgichi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        /* Layer animation pulse */
+        @keyframes pipeFlow {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+        .pipe-water {
+            background: linear-gradient(90deg, #3b82f6 25%, #60a5fa 50%, #3b82f6 75%);
+            background-size: 40px 100%;
+            animation: pipeFlow 2s linear infinite;
+        }
+        .pipe-sewer {
+            background: linear-gradient(90deg, #854d0e 25%, #a16207 50%, #854d0e 75%);
+            background-size: 40px 100%;
+            animation: pipeFlow 3s linear infinite;
+        }
+        .pipe-gas {
+            background: linear-gradient(90deg, #eab308 25%, #fde047 50%, #eab308 75%);
+            background-size: 40px 100%;
+            animation: pipeFlow 1.5s linear infinite;
+        }
+        .pipe-fiber {
+            background: linear-gradient(90deg, #a855f7 25%, #c084fc 50%, #a855f7 75%);
+            background-size: 40px 100%;
+            animation: pipeFlow 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+        <div class="max-w-7xl mx-mx auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-blue-600 text-white rounded-xl shadow-md">
+                        <i class="fa-solid fa-road text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">Aqlli Yo'l & Infratuzilma</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Yagona Koordinatsiyali Rejalashtirish Tizimi</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('calculator')" id="tab-calculator" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30">
+                        <i class="fa-solid fa-calculator mr-2"></i>Kalkulyator va Taqqoslash
+                    </button>
+                    <button onclick="switchTab('visualizer')" id="tab-visualizer" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-layer-group mr-2"></i>Ko'ndalang Kesim Vizualizatori
+                    </button>
+                    <button onclick="switchTab('planner')" id="tab-planner" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-tasks mr-2"></i>Loyiha Rejalashtirgich
+                    </button>
+                </nav>
+
+                <!-- Actions -->
+                <div class="flex items-center space-x-3">
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                    </button>
+                    <button onclick="exportReport()" class="hidden sm:inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+                        <i class="fa-solid fa-file-export mr-2"></i>Hisobotni yuklash
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden border-t border-slate-200 dark:border-slate-700 flex justify-around p-2 bg-white dark:bg-slate-800">
+            <button onclick="switchTab('calculator')" class="p-2 text-xs font-medium text-center text-blue-600 dark:text-blue-400">
+                <i class="fa-solid fa-calculator block text-lg mb-1"></i>Kalkulyator
+            </button>
+            <button onclick="switchTab('visualizer')" class="p-2 text-xs font-medium text-center text-slate-500 dark:text-slate-400">
+                <i class="fa-solid fa-layer-group block text-lg mb-1"></i>Kesim
+            </button>
+            <button onclick="switchTab('planner')" class="p-2 text-xs font-medium text-center text-slate-500 dark:text-slate-400">
+                <i class="fa-solid fa-tasks block text-lg mb-1"></i>Reja
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- SECTION 1: CALCULATOR & COMPARISON -->
+        <section id="section-calculator" class="space-y-6">
+            <!-- Top Input Control Card -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                <h2 class="text-lg font-bold mb-4 flex items-center">
+                    <i class="fa-solid fa-sliders text-blue-500 mr-2"></i> Yo'l Parametrlari va Sharoitni Kiritish
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Yo'l Uzunligi (km)</label>
+                        <input type="number" id="input-length" value="2.5" step="0.1" min="0.1" onchange="calculateMetrics()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Yo'l Kengligi (metr)</label>
+                        <input type="number" id="input-width" value="12" step="1" min="4" onchange="calculateMetrics()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Infratuzilma Qatlamlari</label>
+                        <div class="flex items-center space-x-2 pt-1">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded-lg text-xs font-semibold">Suv</span>
+                            <span class="px-3 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-lg text-xs font-semibold">Kanalizatsiya</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 rounded-lg text-xs font-semibold">Aloqa/Gaz</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Asfalt Birligi Narxi (m²)</label>
+                        <input type="number" id="input-asphalt-cost" value="180000" step="10000" onchange="calculateMetrics()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Savings Banner -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl p-6 shadow-lg flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-3xl">
+                        <i class="fa-solid fa-piggy-bank"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs uppercase tracking-wider text-emerald-100 font-semibold">Integratsiyalashgan Tizimning Samadorligi</span>
+                        <h3 class="text-2xl font-extrabold" id="total-savings-text">0 UZS Tejabo'lindi</h3>
+                        <p class="text-emerald-100 text-sm">Aqlli rejalashtirish orqali ortiqcha sarf-harajat va vaqt yo'qotishlar bartaraf etildi.</p>
+                    </div>
+                </div>
+                <div class="flex space-x-6 text-center bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                    <div>
+                        <p class="text-xs text-emerald-100">Moliyaviy Tejash</p>
+                        <p class="text-xl font-bold" id="cost-savings-percent">0%</p>
+                    </div>
+                    <div class="border-r border-white/20"></div>
+                    <div>
+                        <p class="text-xs text-emerald-100">Vaqtni Tejash</p>
+                        <p class="text-xl font-bold" id="time-savings-days">0 Kun</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side-by-Side Comparison Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Traditional / Incorrect Approach -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border-2 border-red-200 dark:border-red-900/40 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-red-500 text-white text-xs px-3 py-1 rounded-bl-xl font-bold uppercase">
+                        Noto'g'ri Yondashuv
+                    </div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-circle-xmark text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">Ketma-ket (Bo'laklangan) Usul</h3>
+                            <p class="text-xs text-slate-500">Asfalt -> Qazish -> Suv -> Asfalt -> Qazish -> Kanalizatsiya</p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline representation -->
+                    <div class="space-y-3 mb-6">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-road text-slate-400 mr-2"></i>1. Dastlabki asfalt yotqizish</span>
+                            <span class="font-semibold text-red-500" id="old-step-1">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-100 dark:border-red-900/30 text-xs flex justify-between items-center">
+                            <span class="flex items-center text-red-700 dark:text-red-400"><i class="fa-solid fa-person-digging mr-2"></i>2. Yo'lni buzib, Suv quvuri o'tkazish</span>
+                            <span class="font-semibold text-red-600" id="old-step-2">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-road text-slate-400 mr-2"></i>3. Qayta asfalt (Yamoq/Yangi qatlam)</span>
+                            <span class="font-semibold text-red-500" id="old-step-3">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-100 dark:border-red-900/30 text-xs flex justify-between items-center">
+                            <span class="flex items-center text-red-700 dark:text-red-400"><i class="fa-solid fa-dumpster-fire mr-2"></i>4. Qayta buzib, Kanalizatsiya va Aloqa</span>
+                            <span class="font-semibold text-red-600" id="old-step-4">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-road text-slate-400 mr-2"></i>5. Oxirgi marta qayta asfaltlash</span>
+                            <span class="font-semibold text-red-500" id="old-step-5">0 so me</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Jami Moliyaviy Sarf:</span>
+                            <span class="font-bold text-red-600 dark:text-red-400 text-base" id="old-total-cost">0 UZS</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Umumiy Amalga Oshirish Vaqti:</span>
+                            <span class="font-semibold" id="old-total-time">0 Kun</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Yo'l Sifati & Mustahkamligi:</span>
+                            <span class="font-semibold text-red-500">Pastroq (Darzlar va cho'kishlar)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modern / Smart Approach -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border-2 border-emerald-300 dark:border-emerald-800/50 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-emerald-600 text-white text-xs px-3 py-1 rounded-bl-xl font-bold uppercase">
+                        To'g'ri (Aqlli) Yondashuv
+                    </div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-circle-check text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">Yagona Koordinatsiyali Usul</h3>
+                            <p class="text-xs text-slate-500">Barcha Yer osti Infratuzilmasi -> Yakuniy Tekis Asfalt</p>
+                        </div>
+                    </div>
+
+                    <!-- Timeline representation -->
+                    <div class="space-y-3 mb-6">
+                        <div class="p-3 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-map-location-dot text-emerald-500 mr-2"></i>1. Yagona GEO-Xarita va Master Reja</span>
+                            <span class="font-semibold text-emerald-600" id="new-step-1">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-trowel-bricks text-emerald-500 mr-2"></i>2. Chuqur kanalizatsiya va asosiy suv trassalari</span>
+                            <span class="font-semibold text-emerald-600" id="new-step-2">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-network-wired text-emerald-500 mr-2"></i>3. Gaz, Elektr va Internet kollektorlari</span>
+                            <span class="font-semibold text-emerald-600" id="new-step-3">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-xl border border-emerald-100 dark:border-emerald-900/20 text-xs flex justify-between items-center">
+                            <span class="flex items-center"><i class="fa-solid fa-compact-disc text-emerald-500 mr-2"></i>4. Tuproqni zichlash va shag'al bosti</span>
+                            <span class="font-semibold text-emerald-600" id="new-step-4">0 so'm</span>
+                        </div>
+                        <div class="p-3 bg-emerald-100/60 dark:bg-emerald-900/30 rounded-xl border border-emerald-200 dark:border-emerald-700/50 text-xs flex justify-between items-center font-bold">
+                            <span class="flex items-center text-emerald-800 dark:text-emerald-300"><i class="fa-solid fa-road text-emerald-600 mr-2"></i>5. Yakuniy Mustahkam Asfalt Qatlami</span>
+                            <span class="text-emerald-700 dark:text-emerald-300" id="new-step-5">0 so'm</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Jami Moliyaviy Sarf:</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400 text-base" id="new-total-cost">0 UZS</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Umumiy Amalga Oshirish Vaqti:</span>
+                            <span class="font-semibold text-emerald-600" id="new-total-time">0 Kun</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Yo'l Sifati & Mustahkamligi:</span>
+                            <span class="font-semibold text-emerald-600">Yuqori (10+ yil kafolat)</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Visual Charts Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-base font-bold mb-4 flex items-center">
+                        <i class="fa-solid fa-chart-pie text-blue-500 mr-2"></i> Xarajatlar Solishtirmasi
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                    <h3 class="text-base font-bold mb-4 flex items-center">
+                        <i class="fa-solid fa-chart-column text-emerald-500 mr-2"></i> Loyiha Davomiyligi (Vaqt/Kun)
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SECTION 2: ROAD CROSS-SECTION VISUALIZER -->
+        <section id="section-visualizer" class="space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold flex items-center">
+                            <i class="fa-solid fa-layer-group text-blue-500 mr-2"></i> Yo'lning Ko'ndalang Kesim Interaktiv Vizualizatsiyasi
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Yer osti kommunikatsiyalarining tartibli va chuqurlik bo'yicha joylashuv sxemasi.</p>
+                    </div>
+
+                    <!-- Interactive Toggles -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="togglePipe('water')" id="btn-toggle-water" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow-sm transition">
+                            <i class="fa-solid fa-droplet mr-1"></i> Suv Quvuri
+                        </button>
+                        <button onclick="togglePipe('sewer')" id="btn-toggle-sewer" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-700 text-white shadow-sm transition">
+                            <i class="fa-solid fa-toilet mr-1"></i> Kanalizatsiya
+                        </button>
+                        <button onclick="togglePipe('gas')" id="btn-toggle-gas" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-yellow-500 text-white shadow-sm transition">
+                            <i class="fa-solid fa-fire mr-1"></i> Gaz Tarmog'i
+                        </button>
+                        <button onclick="togglePipe('fiber')" id="btn-toggle-fiber" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-600 text-white shadow-sm transition">
+                            <i class="fa-solid fa-network-wired mr-1"></i> Aloqa/Optika
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Graphic Road Cut Section Visual Container -->
+                <div class="w-full bg-slate-100 dark:bg-slate-950 rounded-2xl p-6 border border-slate-300 dark:border-slate-800 relative overflow-hidden select-none">
+                    
+                    <!-- Above Surface / Sky & Trees & Streetlights -->
+                    <div class="h-20 border-b border-slate-300 dark:border-slate-700 flex justify-between items-end px-8 pb-1">
+                        <div class="flex space-x-6 items-end">
+                            <div class="text-emerald-600 dark:text-emerald-500 text-3xl"><i class="fa-solid fa-tree"></i></div>
+                            <div class="text-slate-400 text-2xl"><i class="fa-solid fa-lightbulb"></i></div>
+                        </div>
+                        <div class="flex space-x-8 items-end">
+                            <div class="text-slate-500 text-2xl"><i class="fa-solid fa-car-side"></i></div>
+                            <div class="text-emerald-600 dark:text-emerald-500 text-3xl"><i class="fa-solid fa-tree"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Asfalt Top Surface Layer -->
+                    <div class="bg-slate-800 dark:bg-slate-900 text-white h-16 rounded-sm relative flex items-center justify-between px-6 border-y-2 border-slate-600 shadow-inner">
+                        <span class="text-xs font-bold uppercase tracking-widest text-slate-400">Asfalt Qatlami (Top Layer - 12-15 sm)</span>
+                        <div class="flex space-x-4">
+                            <div class="w-12 h-1 bg-yellow-400 rounded-full"></div>
+                            <div class="w-12 h-1 bg-yellow-400 rounded-full"></div>
+                            <div class="w-12 h-1 bg-yellow-400 rounded-full"></div>
+                        </div>
+                        <span class="text-xs text-slate-400">Monolit qoplama</span>
+                    </div>
+
+                    <!-- Sub-base Aggregate Gravel Layer -->
+                    <div class="bg-amber-900/30 dark:bg-amber-950/60 h-10 border-b border-amber-900/40 flex items-center justify-center">
+                        <span class="text-xs font-semibold text-amber-700 dark:text-amber-400">Shag'al va qum asosi (Sub-Base Cushion - 30 sm)</span>
+                    </div>
+
+                    <!-- Deep Underground Trench Zone (Pipes) -->
+                    <div class="bg-amber-950/20 dark:bg-slate-900/90 h-64 relative rounded-b-xl border-t border-slate-700 p-4">
+                        <div class="absolute left-2 top-2 text-[10px] text-slate-400 uppercase font-mono">Yer osti kommunikatsiya kanali</div>
+                        
+                        <!-- Utility Duct Grid System / Trenches -->
+                        <div class="h-full grid grid-cols-4 gap-4 items-center">
+                            
+                            <!-- 1. Water Pipe Trench -->
+                            <div id="vis-pipe-water" class="h-full flex flex-col justify-end items-center p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 transition-all duration-300">
+                                <span class="text-[11px] font-bold text-blue-500 mb-2">Suv (1.8m)</span>
+                                <div class="w-16 h-16 rounded-full pipe-water shadow-md border-2 border-blue-400 flex items-center justify-center text-white font-bold text-xs">
+                                    Ø 300
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-2">Ichimlik suvi</span>
+                            </div>
+
+                            <!-- 2. Sewerage Pipe Trench (Deeper) -->
+                            <div id="vis-pipe-sewer" class="h-full flex flex-col justify-end items-center p-2 rounded-xl bg-amber-800/10 border border-amber-800/30 transition-all duration-300">
+                                <span class="text-[11px] font-bold text-amber-700 dark:text-amber-500 mb-2">Kanalizatsiya (2.5m)</span>
+                                <div class="w-20 h-20 rounded-full pipe-sewer shadow-md border-2 border-amber-600 flex items-center justify-center text-white font-bold text-xs">
+                                    Ø 500
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-2">Oqova suv</span>
+                            </div>
+
+                            <!-- 3. Gas Pipeline Trench -->
+                            <div id="vis-pipe-gas" class="h-full flex flex-col justify-center items-center p-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 transition-all duration-300">
+                                <span class="text-[11px] font-bold text-yellow-600 dark:text-yellow-400 mb-2">Gaz Tarmog'i (1.2m)</span>
+                                <div class="w-12 h-12 rounded-full pipe-gas shadow-md border-2 border-yellow-400 flex items-center justify-center text-slate-900 font-bold text-xs">
+                                    Ø 150
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-2">Yuqori bosim</span>
+                            </div>
+
+                            <!-- 4. Fiber Optic / Electricity Duct -->
+                            <div id="vis-pipe-fiber" class="h-full flex flex-col justify-start items-center p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 transition-all duration-300">
+                                <span class="text-[11px] font-bold text-purple-500 mb-2">Aloqa & Elektr (0.8m)</span>
+                                <div class="w-10 h-10 rounded-full pipe-fiber shadow-md border-2 border-purple-400 flex items-center justify-center text-white font-bold text-xs">
+                                    Kabel
+                                </div>
+                                <span class="text-[10px] text-slate-400 mt-2">Optika / 10kV</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Cards below visualizer -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400 mb-1"><i class="fa-solid fa-shield-halved mr-2"></i>Himoya Tunellari (Concrete Ducts)</h4>
+                        <p class="text-xs text-slate-500">Quvurlarni maxsus beton kollektorlarga joylash kelajakda yo'lni qazmasdan ta'mirlash imkonini beradi.</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-sm text-amber-600 dark:text-amber-400 mb-1"><i class="fa-solid fa-ruler-vertical mr-2"></i>Chuqurlik Standartlari</h4>
+                        <p class="text-xs text-slate-500">Muzlash va yuklama darajasiga qarab eng chuqurda kanalizatsiya (2.5m+), eng ustida aloqa kabellari joylashadi.</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h4 class="font-bold text-sm text-emerald-600 dark:text-emerald-400 mb-1"><i class="fa-solid fa-compress-arrows-alt mr-2"></i>Zichlash Talablari</h4>
+                        <p class="text-xs text-slate-500">Har bir qatlam ko'milgach, vibro-roliklar yordamida 98% zichlikka erishilgandan so'ngгина asfalt bosiladi.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- SECTION 3: PROJECT STEP-BY-STEP PLANNER -->
+        <section id="section-planner" class="space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold flex items-center">
+                            <i class="fa-solid fa-tasks text-blue-500 mr-2"></i> Yo'l Segmenti Bo'yicha Bosqichma-Bosqich Rejalashtirgich
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Har bir idora (Suvsoz, Obodonlashtirish, Yo'lqurilish, Telekom) uchun yagona jadval.</p>
+                    </div>
+                    <button onclick="addNewPhase()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md transition flex items-center">
+                        <i class="fa-solid fa-plus mr-2"></i> Yangi Bosqich Qo'shish
+                    </button>
+                </div>
+
+                <!-- Interactive Workflow Phase Cards -->
+                <div class="space-y-4" id="workflow-container">
+                    
+                    <!-- Phase 1 -->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center">1</span>
+                            <div>
+                                <h4 class="font-bold text-sm">GEO-Razvedka va Yagona Xarita Tuzish</h4>
+                                <p class="text-xs text-slate-500">Barcha tashkilotlar o'z yer osti tarmoqlarini raqamli xaritaga kiritadi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                            <span class="px-3 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-full text-xs font-semibold">Jarayonda (5 kun)</span>
+                            <span class="text-xs text-slate-400 font-mono">Mas'ul: Kadastr & GEO</span>
+                            <input type="checkbox" checked class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Phase 2 -->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-sm flex items-center justify-center">2</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Magistral Yer Osti Transheyalarini Qazish</h4>
+                                <p class="text-xs text-slate-500">Kanalizatsiya va suv quvurlari uchun chuqur zovurlar tayyorlanadi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded-full text-xs font-semibold">Kutilmoqda (10 kun)</span>
+                            <span class="text-xs text-slate-400 font-mono">Mas'ul: Suvsoz Pudrat</span>
+                            <input type="checkbox" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Phase 3 -->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="w-8 h-8 rounded-full bg-purple-600 text-white font-bold text-sm flex items-center justify-center">3</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Beton Kollektorlar va Kabellarni Yotqizish</h4>
+                                <p class="text-xs text-slate-500">Aloqa, elektr va gaz quvurlari parallel ravishda maxsus kanallarga o'rnatiladi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                            <span class="px-3 py-1 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-full text-xs font-semibold">Rejalashtirilgan</span>
+                            <span class="text-xs text-slate-400 font-mono">Mas'ul: Uzbektelekom / HET</span>
+                            <input type="checkbox" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Phase 4 -->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">4</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Qatlamli Zichlash va Shag'al Yotqizish</h4>
+                                <p class="text-xs text-slate-500">Har 30 sm qatlam gidravlik zichlanadi hamda texnik sinovdan o'tkaziladi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                            <span class="px-3 py-1 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-full text-xs font-semibold">Rejalashtirilgan</span>
+                            <span class="text-xs text-slate-400 font-mono">Mas'ul: Yo'l Laboratoriyasi</span>
+                            <input type="checkbox" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Phase 5 -->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center space-x-4">
+                            <span class="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-sm flex items-center justify-center">5</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Yakuniy Asfalt Yotqizish hamda Kafolat Sertifikati</h4>
+                                <p class="text-xs text-slate-500">Monolit asfalt qatlami bosiladi. 10 yillik qazmaslik kafolati kuchga kiradi.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                            <span class="px-3 py-1 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-full text-xs font-semibold">Rejalashtirilgan</span>
+                            <span class="text-xs text-slate-400 font-mono">Mas me: Avtoyavtoyo'l</span>
+                            <input type="checkbox" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            Smart Infrastructure System © 2026 — O'zbekiston Yo'l va Kommunikatsiya Samadorligi Platformasi
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Global variables & state
+        let costChart = null;
+        let timeChart = null;
+
+        const pipeVisibility = {
+            water: true,
+            sewer: true,
+            gas: true,
+            fiber: true
+        };
+
+        // Initialize Theme Toggle
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Tab Switching logic
+        function switchTab(tabName) {
+            // Hide all sections
+            document.getElementById('section-calculator').classList.add('hidden');
+            document.getElementById('section-visualizer').classList.add('hidden');
+            document.getElementById('section-planner').classList.add('hidden');
+
+            // Reset tab styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'dark:text-blue-400', 'bg-blue-50', 'dark:bg-blue-900/30');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+
+            // Active chosen tab
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            const activeNavBtn = document.getElementById(`tab-${tabName}`);
+            if(activeNavBtn) {
+                activeNavBtn.classList.add('text-blue-600', 'dark:text-blue-400', 'bg-blue-50', 'dark:bg-blue-900/30');
+                activeNavBtn.classList.remove('text-slate-600', 'dark:text-slate-300');
+            }
+        }
+
+        // Format Currency
+        function formatUZS(amount) {
+            return new Intl.NumberFormat('uz-UZ').format(Math.round(amount)) + " UZS";
+        }
+
+        // Primary Calculation Engine
+        function calculateMetrics() {
+            const lengthKm = parseFloat(document.getElementById('input-length').value) || 1;
+            const widthM = parseFloat(document.getElementById('input-width').value) || 10;
+            const asphaltCostPerM2 = parseFloat(document.getElementById('input-asphalt-cost').value) || 180000;
+
+            const areaM2 = lengthKm * 1000 * widthM;
+            
+            // Base Costs
+            const baseAsphaltCost = areaM2 * asphaltCostPerM2;
+            const excavationCostPerKm = 150000000; // Base excavation cost
+            const pipeLayingCostPerKm = 250000000; // Utilities placement cost
+
+            // --- Traditional (Incorrect) Scenario Calculation ---
+            // Step 1: Initial Asphalt = 100% base
+            const oldStep1 = baseAsphaltCost;
+            // Step 2: Digging road + Water pipe = excavation + water + 40% road damage replacement
+            const oldStep2 = (excavationCostPerKm * lengthKm * 1.2) + (pipeLayingCostPerKm * lengthKm) + (baseAsphaltCost * 0.4);
+            // Step 3: Patch/Repave Asphalt
+            const oldStep3 = baseAsphaltCost * 0.5;
+            // Step 4: Digging road again + Sewerage + Damage
+            const oldStep4 = (excavationCostPerKm * lengthKm * 1.4) + (pipeLayingCostPerKm * lengthKm * 1.2) + (baseAsphaltCost * 0.5);
+            // Step 5: Final repaving attempt
+            const oldStep5 = baseAsphaltCost * 0.8;
+
+            const oldTotalCost = oldStep1 + oldStep2 + oldStep3 + oldStep4 + oldStep5;
+            const oldTotalDays = Math.round(lengthKm * 45); // ~45 days per km due to repeated work
+
+            // --- Modern (Smart) Integrated Scenario Calculation ---
+            // Step 1: Geo Masterplan
+            const newStep1 = 30000000 * lengthKm;
+            // Step 2: Main deep trench & sewer
+            const newStep2 = excavationCostPerKm * lengthKm * 1.1;
+            // Step 3: All pipes & communication in single trench/duct
+            const newStep3 = pipeLayingCostPerKm * lengthKm * 1.5; 
+            // Step 4: Ground compaction & gravel
+            const newStep4 = 80000000 * lengthKm;
+            // Step 5: Single high quality final asphalt
+            const newStep5 = baseAsphaltCost * 1.05; // standard single paving
+
+            const newTotalCost = newStep1 + newStep2 + newStep3 + newStep4 + newStep5;
+            const newTotalDays = Math.round(lengthKm * 18); // ~18 days per km
+
+            // Savings
+            const savingsCost = oldTotalCost - newTotalCost;
+            const savingsPercent = ((savingsCost / oldTotalCost) * 100).toFixed(1);
+            const savingsDays = oldTotalDays - newTotalDays;
+
+            // Render text in UI
+            document.getElementById('old-step-1').innerText = formatUZS(oldStep1);
+            document.getElementById('old-step-2').innerText = formatUZS(oldStep2);
+            document.getElementById('old-step-3').innerText = formatUZS(oldStep3);
+            document.getElementById('old-step-4').innerText = formatUZS(oldStep4);
+            document.getElementById('old-step-5').innerText = formatUZS(oldStep5);
+            document.getElementById('old-total-cost').innerText = formatUZS(oldTotalCost);
+            document.getElementById('old-total-time').innerText = oldTotalDays + " Kun";
+
+            document.getElementById('new-step-1').innerText = formatUZS(newStep1);
+            document.getElementById('new-step-2').innerText = formatUZS(newStep2);
+            document.getElementById('new-step-3').innerText = formatUZS(newStep3);
+            document.getElementById('new-step-4').innerText = formatUZS(newStep4);
+            document.getElementById('new-step-5').innerText = formatUZS(newStep5);
+            document.getElementById('new-total-cost').innerText = formatUZS(newTotalCost);
+            document.getElementById('new-total-time').innerText = newTotalDays + " Kun";
+
+            document.getElementById('total-savings-text').innerText = formatUZS(savingsCost) + " Tejabo'lindi";
+            document.getElementById('cost-savings-percent').innerText = savingsPercent + "%";
+            document.getElementById('time-savings-days').innerText = savingsDays + " Kun";
+
+            // Update Charts
+            updateCharts(oldTotalCost, newTotalCost, oldTotalDays, newTotalDays);
+        }
+
+        // Render & Update Chart.js Graphics
+        function updateCharts(oldCost, newCost, oldTime, newTime) {
+            // Cost Chart
+            const ctxCost = document.getElementById('costChart').getContext('2d');
+            if(costChart) costChart.destroy();
+            
+            costChart = new Chart(ctxCost, {
+                type: 'bar',
+                data: {
+                    labels: ['Noto\'g\'ri Usul (Qayta qazish)', 'Aqlli Integrated Usul'],
+                    datasets: [{
+                        label: 'Umumiy Xarajat (UZS)',
+                        data: [oldCost, newCost],
+                        backgroundColor: ['#ef4444', '#10b981'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000000).toFixed(1) + ' Mlyrd';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Time Chart
+            const ctxTime = document.getElementById('timeChart').getContext('2d');
+            if(timeChart) timeChart.destroy();
+
+            timeChart = new Chart(ctxTime, {
+                type: 'bar',
+                data: {
+                    labels: ['Noto\'g\'ri Usul', 'Aqlli Integrated Usul'],
+                    datasets: [{
+                        label: 'Bajarilish Vaqti (Kun)',
+                        data: [oldTime, newTime],
+                        backgroundColor: ['#f97316', '#3b82f6'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Toggle Pipe visibility in Cross-section visualizer
+        function togglePipe(type) {
+            pipeVisibility[type] = !pipeVisibility[type];
+            const el = document.getElementById(`vis-pipe-${type}`);
+            const btn = document.getElementById(`btn-toggle-${type}`);
+
+            if(pipeVisibility[type]) {
+                el.style.opacity = '1';
+                el.style.transform = 'scale(1)';
+                btn.classList.remove('opacity-40');
+            } else {
+                el.style.opacity = '0.1';
+                el.style.transform = 'scale(0.95)';
+                btn.classList.add('opacity-40');
+            }
+        }
+
+        // Add new project task dynamically in planner
+        function addNewPhase() {
+            const container = document.getElementById('workflow-container');
+            const count = container.children.length + 1;
+
+            const div = document.createElement('div');
+            div.className = "p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4";
+            div.innerHTML = `
+                <div class="flex items-center space-x-4">
+                    <span class="w-8 h-8 rounded-full bg-slate-600 text-white font-bold text-sm flex items-center justify-center">${count}</span>
+                    <div>
+                        <h4 class="font-bold text-sm">Yangi Qo'shimcha Infratuzilma Bosqichi</h4>
+                        <p class="text-xs text-slate-500">Texnik nazorat va laboratoriya tekshiruvi amallari.</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                    <span class="px-3 py-1 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-full text-xs font-semibold">Rejalashtirilgan</span>
+                    <span class="text-xs text-slate-400 font-mono">Mas'ul: Nazorat Organi</span>
+                    <input type="checkbox" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        // Export functionality simulation
+        function exportReport() {
+            const lengthKm = document.getElementById('input-length').value;
+            const text = `AQLLI YO'L VA INFRATUZILMA HISO BOTI\n-----------------------------------\nYo'l masofasi: ${lengthKm} km\nStatus: Muvaffaqiyatli rejalashtirildi.\nIntegratsiyalashgan yondashuv orqali ortiqcha qazish ishlarining 100% oldi olindi.`;
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Yo'l_Loyiha_Hisobot_${lengthKm}km.txt`;
+            a.click();
+        }
+
+        // Initial Calculation on Page Load
+        window.onload = function() {
+            calculateMetrics();
+        };
+    </script>
+</body>
+</html>
